@@ -199,16 +199,6 @@ docker run -p 8080:8080 memberqa
 
 ---
 
-## 📹 Optional Loom Walkthrough (1–2 mins)
-
-1. Open `/ui/` → ask a few example questions.  
-2. Show answers + evidence and latency.  
-3. Open `/ask?question=…` directly to show raw JSON.  
-4. Briefly explain design choices (rules, fuzzy match, regex, evidence).  
-5. Show repo + deployed URL.
-
----
-
 ## 🧱 Stack
 
 - **Backend:** Python 3.11 + FastAPI + Uvicorn  
