@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Member QA</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{
+      --bg: #0b0c10;
+      --panel: #111217;
+      --muted: #8b8ea3;
+      --text: #e8e9f1;
+      --accent: #8b5cf6;       /* purple */
+      --accent2:#22c55e;       /* green */
+      --ring: rgba(139,92,246,.55);
+      --bad: #ef4444;
+      --chip: #1a1b23;
+      --chipb:#242637;
+      --code: #0f1220;
+    }
+    @media (prefers-color-scheme: light){
+      :root{
+        --bg: #f7f7fb;
+        --panel: #ffffff;
+        --muted: #5a6275;
+        --text: #0f1220;
+        --accent: #6d28d9;
+        --ring: rgba(109,40,217,.35);
+        --chip: #f1f1f8;
+        --chipb:#ececf6;
+        --code:#f6f7ff;
+      }
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; padding:2rem;
+      font: 16px/1.5 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      color:var(--text); background:radial-gradient(1200px 800px at 80% -10%, rgba(139,92,246,.08), transparent 50%), var(--bg);
+    }
+    .wrap{max-width:840px;margin:0 auto}
+    .header{
+      display:flex; align-items:center; gap:.75rem; margin-bottom:1.25rem;
+    }
+    .logo{
+      inline-size:38px; block-size:38px; border-radius:10px;
+      background: linear-gradient(145deg, var(--accent), #00d4ff);
+      box-shadow: 0 10px 24px rgba(0,0,0,.15), inset 0 0 0 2px rgba(255,255,255,.18);
+    }
+    h1{font-size:1.15rem; margin:0; letter-spacing:.2px}
+    .muted{color:var(--muted)}
+    .card{
+      background: var(--panel);
+      border-radius:16px;
+      padding:18px;
+      box-shadow: 0 12px 30px rgba(0,0,0,.25), inset 0 0 0 1px rgba(255,255,255,.04);
+    }
+    .row{display:flex; gap:.6rem}
+    .row input{
+      flex:1; font-size:1rem; padding:.9rem 1rem; border-radius:12px; border:1px solid transparent;
+      background:#0f1120; color:var(--text); outline:none;
+      transition:border .15s, box-shadow .15s, background .2s;
+    }
+    @media (prefers-color-scheme: light){
+      .row input{background:#f6f7ff;}
+    }
+    .row input:focus{
+      border-color: var(--accent);
+      box-shadow: 0 0 0 6px var(--ring);
+    }
+    .row button{
+      padding:.9rem 1.1rem; border-radius:12px; border:1px solid transparent; cursor:pointer;
+      font-weight:600; background:linear-gradient(180deg, var(--accent), #6a3ff2); color:white;
+      box-shadow: 0 8px 18px rgba(139,92,246,.35);
+    }
+    .row button[disabled]{opacity:.65; cursor:not-allowed; box-shadow:none}
+    .chips{display:flex; flex-wrap:wrap; gap:.5rem; margin:.9rem 0 0}
+    .chip{
+      padding:.5rem .7rem; border-radius:999px; background:linear-gradient(180deg,var(--chip),var(--chipb));
+      border:1px solid rgba(255,255,255,.06); cursor:pointer; font-size:.9rem;
+    }
+    .answer{
+      margin-top:1rem; display:grid; gap:.6rem;
+    }
+    .answer .title{font-size:2.1rem; font-weight:800; letter-spacing:.2px}
+    .bad{color:var(--bad)}
+    .badge{
+      display:inline-flex; align-items:center; gap:.35rem;
+      padding:.35rem .6rem; border-radius:999px; font-size:.85rem; font-weight:600;
+      background:rgba(34,197,94,.14); color:var(--accent2); border:1px solid rgba(34,197,94,.35);
+    }
+    .evidence{margin-top:.3rem; border-top:1px dashed rgba(255,255,255,.12); padding-top:.8rem}
+    .evidence h3{margin:.2rem 0 .6rem; font-size:.95rem; color:var(--muted)}
+    .evidence li{margin:.25rem 0; background:var(--code); padding:.6rem .7rem; border-radius:10px; border:1px solid rgba(255,255,255,.06)}
+    .actions{display:flex; gap:.5rem; margin-top:.2rem}
+    .ghost{
+      background:transparent; color:var(--text); border:1px solid rgba(255,255,255,.14);
+      padding:.45rem .7rem; border-radius:10px; cursor:pointer;
+    }
+    .small{font-size:.9rem}
+    .status{margin-top:.75rem; color:var(--muted); font-size:.9rem}
+    .grid{display:grid; gap:1rem}
+    .hidden{display:none}
+    .spinner{
+      inline-size:18px; block-size:18px; border-radius:50%;
+      border:3px solid rgba(255,255,255,.25); border-top-color:#fff; animation:spin .9s linear infinite;
+    }
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .footer{margin-top:1rem; color:var(--muted); font-size:.88rem}
+    code{background:var(--code); padding:.15rem .35rem; border-radius:6px; border:1px solid rgba(255,255,255,.08)}
+    a{color:#8ab4ff; text-decoration:none} a:hover{text-decoration:underline}
+  </style>
+</head>
+<body>
+  <div class="wrap grid">
+    <div class="header">
+      <div class="logo" aria-hidden="true"></div>
+      <div>
+        <h1>Member QA</h1>
+        <div class="muted small">Ask natural-language questions about member messages.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="row">
+        <input id="q" placeholder="Ask: When is Armand going to Milan?" autofocus />
+        <button id="askBtn" onclick="ask()">
+          <span id="askText">Ask</span>
+          <span id="askSpin" class="spinner hidden" aria-hidden="true"></span>
+        </button>
+      </div>
+
+      <div class="chips" id="chips">
+        <button class="chip" onclick="fill('When is Sophia Al-Farsi going to Paris?')">Paris date</button>
+        <button class="chip" onclick="fill('What seat preference does Layla Kawaguchi have?')">Seat preference</button>
+        <button class="chip" onclick="fill('When is Armand going to Milan?')">Milan date</button>
+      </div>
+
+      <div id="outCard" class="answer hidden">
+        <div class="title" id="answerTxt">—</div>
+        <div class="status" id="meta">—</div>
+
+        <div class="evidence hidden" id="evidenceBlock">
+          <h3>Evidence</h3>
+          <ol id="evidenceList"></ol>
+          <div class="actions">
+            <button class="ghost small" onclick="copyJSON()">Copy JSON</button>
+            <button class="ghost small" onclick="copyCurl()">Copy cURL</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="status" class="status"></div>
+    </div>
+
+    <div class="footer">
+      <div>API: <code>GET /ask?question=…</code> • Press <b>Enter</b> to submit • Fully client-side, no external CSS/JS.</div>
+    </div>
+  </div>
+
+  <script>
+    const qEl = document.getElementById('q');
+    const outCard = document.getElementById('outCard');
+    const answerTxt = document.getElementById('answerTxt');
+    const meta = document.getElementById('meta');
+    const statusEl = document.getElementById('status');
+    const evBlock = document.getElementById('evidenceBlock');
+    const evList = document.getElementById('evidenceList');
+    const askBtn = document.getElementById('askBtn');
+    const askText = document.getElementById('askText');
+    const askSpin = document.getElementById('askSpin');
+
+    function fill(text){ qEl.value = text; qEl.focus(); }
+    qEl.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ ask(); }});
+
+    function setBusy(b){
+      askBtn.disabled = b;
+      askText.classList.toggle('hidden', b);
+      askSpin.classList.toggle('hidden', !b);
+    }
+
+    function render(resp, ms, question){
+      outCard.classList.remove('hidden');
+      const conf = (resp.confidence ?? 0);
+      const ok = conf >= 0.5 && !/couldn't find/i.test(resp.answer || '');
+      answerTxt.textContent = resp.answer || '—';
+      answerTxt.classList.toggle('bad', !ok);
+
+      const badge = `<span class="badge" title="Confidence score">${(conf*100).toFixed(0)}%</span>`;
+      meta.innerHTML = `${badge} • <span class="muted">Latency:</span> ${ms}ms • <span class="muted">Question:</span> ${escapeHtml(question)}`;
+
+      const ev = Array.isArray(resp.evidence) ? resp.evidence : [];
+      evBlock.classList.toggle('hidden', ev.length === 0);
+      evList.innerHTML = ev.map(e => `<li><strong>#${escapeHtml(e.message_id||'-')}</strong><br>${escapeHtml(e.snippet||'')}</li>`).join('');
+    }
+
+    async function ask(){
+      const question = qEl.value.trim();
+      if(!question){ qEl.focus(); return; }
+
+      setBusy(true);
+      statusEl.textContent = 'Asking…';
+      outCard.classList.add('hidden');
+      evBlock.classList.add('hidden');
+
+      const t0 = performance.now();
+      try{
+        const r = await fetch('/ask?'+new URLSearchParams({question}));
+        const ms = Math.max(1, Math.round(performance.now()-t0));
+        if(!r.ok){
+          const txt = await r.text();
+          statusEl.textContent = `Error ${r.status}: ${txt.slice(0,160)}`;
+          setBusy(false);
+          return;
+        }
+        const data = await r.json();
+        render(data, ms, question);
+        statusEl.textContent = '';
+        window._last = {data, question};
+      }catch(err){
+        statusEl.textContent = 'Network error: '+err;
+      }finally{
+        setBusy(false);
+      }
+    }
+
+    function copyJSON(){
+      if(!window._last){ return; }
+      const blob = JSON.stringify(window._last.data, null, 2);
+      navigator.clipboard.writeText(blob);
+      toast('Response JSON copied');
+    }
+    function copyCurl(){
+      if(!window._last){ return; }
+      const q = encodeURIComponent(window._last.question);
+      const cmd = `curl -s "YOUR_PUBLIC_URL/ask?question=${q}"`;
+      navigator.clipboard.writeText(cmd);
+      toast('cURL copied – replace YOUR_PUBLIC_URL after deploy');
+    }
+
+    function toast(txt){
+      const el = document.createElement('div');
+      el.textContent = txt;
+      el.style.cssText = "position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:.5rem .8rem;border-radius:10px;border:1px solid rgba(255,255,255,.15);box-shadow:0 8px 20px rgba(0,0,0,.35);z-index:9999";
+      document.body.appendChild(el);
+      setTimeout(()=>el.remove(), 1600);
+    }
+
+    function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, m=>({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[m])); }
+  </script>
+</body>
+</html>
