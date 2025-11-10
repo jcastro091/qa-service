@@ -71,14 +71,55 @@ curl -s "https://qa-service-ij3z.onrender.com/ask?question=When%20is%20Armand%20
 ⚠️ Cons:
 - Limited coverage—needs new rules for new question types
 
+---
+
 ### Alternative Approaches Considered
 
-1. **Vector Search (Embeddings + FAISS)**
-2. **RAG (Retrieval-Augmented Generation)**
-3. **spaCy + Duckling IE Pipeline**
-4. **Fine-tuned Intent + Slot Model**
+#### 1. Vector Search (Embeddings + FAISS)
+**Pros:**
+- Handles semantically similar phrasing (“trip to London” ≈ “travel plans for London”)  
+- Scales efficiently for large datasets with cosine similarity search  
+- No manual rules needed for every phrasing  
 
-**Reason chosen:** deterministic, fast, and interpretable—ideal for a short take-home and easy to extend.
+**Cons:**
+- Requires embedding generation and storage overhead  
+- Less interpretable; results not always explainable  
+- Performance depends on embedding model quality  
+
+#### 2. RAG (Retrieval-Augmented Generation)
+**Pros:**
+- Combines retrieval with LLM reasoning for natural answers  
+- Extremely flexible for unseen or complex question types  
+- Can summarize multi-sentence responses  
+
+**Cons:**
+- Expensive (LLM API or GPU inference cost)  
+- Prone to hallucination if retrieval isn’t filtered  
+- Requires guardrails and caching for production  
+
+#### 3. spaCy + Duckling IE Pipeline
+**Pros:**
+- Great for extracting structured entities (dates, names, cities)  
+- Lightweight and deterministic  
+- Integrates easily into rule-based systems  
+
+**Cons:**
+- Requires tuning custom entity patterns for new data  
+- Limited contextual understanding beyond token patterns  
+
+#### 4. Fine-tuned Intent + Slot Model
+**Pros:**
+- Very accurate for repetitive, domain-specific intents  
+- Predictable inference cost, easy to host  
+- Excellent for fixed template questions  
+
+**Cons:**
+- Needs labeled training data  
+- Poor generalization to new phrasings  
+- Slower to evolve as schema or domain changes  
+
+✅ **Chosen Approach:**  
+Rule-based and fuzzy retrieval offered the **best interpretability, speed, and reliability** for a small dataset — ideal for a short take-home challenge with real-time inference.
 
 ---
 
@@ -86,41 +127,35 @@ curl -s "https://qa-service-ij3z.onrender.com/ask?question=When%20is%20Armand%20
 
 | Observation | Detail |
 |--------------|---------|
-| Redirect behavior | `/messages` 302 redirects handled with `follow_redirects=True`. |
-| Schema inconsistency | Some use `message` instead of `text`, or `user_name` instead of `member_name`. |
-| Temporal inconsistencies | Mixed timestamp formats; normalized internally. |
-| Sparse facts | Missing facts correctly yield confidence `0.0`. |
-| Lexical ambiguity | “Layla” + “London” handled via fuzzy matching. |
+| Redirect behavior | `/messages` endpoint returned 302/307 redirects handled with `follow_redirects=True` |
+| Schema inconsistency | Some fields use `message` vs `text`, or `user_name` vs `member_name` |
+| Temporal inconsistencies | Mixed timestamp formats normalized internally |
+| Sparse facts | Missing or incomplete facts gracefully return confidence `0.0` |
+| Lexical ambiguity | Fuzzy matching resolves minor spelling/name variations |
 
-Run analysis locally:
+Run locally to inspect data insights:
 ```bash
 python scripts/evaluate.py
 ```
 
 ---
 
-## 🌍 Deploy (Render)
+## 🌍 Deployment (Render)
 
-The live deployment is hosted on Render’s free tier.  
-Follow these steps to reproduce:
+The app is publicly deployed via **Render**:  
+👉 [https://qa-service-ij3z.onrender.com/ui/](https://qa-service-ij3z.onrender.com/ui/)
 
-1. Fork or clone this repo.  
-2. Create a new Web Service on [Render](https://render.com/).  
-3. **Runtime:** Python 3.x  
-4. **Build Command:**  
-   ```bash
-   pip install -r requirements.txt
-   ```  
-5. **Start Command:**  
-   ```bash
-   gunicorn -k uvicorn.workers.UvicornWorker app.main:app
-   ```  
-6. **Environment Variables:**
+Steps to replicate:
+
+1. Create a **new Web Service** on [Render](https://render.com/).  
+2. **Runtime:** Python 3.x  
+3. **Build Command:** `pip install -r requirements.txt`  
+4. **Start Command:** `gunicorn -k uvicorn.workers.UvicornWorker app.main:app`  
+5. Add environment variable:  
    ```
    MESSAGES_API_URL=https://november7-730026606190.europe-west1.run.app/messages
-   ```
-7. Wait for build → visit your public URL, e.g.:  
-   [https://qa-service-ij3z.onrender.com/ui/](https://qa-service-ij3z.onrender.com/ui/)
+   ```  
+6. Deploy and visit your public URL!
 
 ---
 
@@ -133,13 +168,18 @@ Follow these steps to reproduce:
 
 ---
 
-## ✨ Why This Submission Stands Out
+## 🚀 Future Improvements
 
-- **Publicly hosted + working demo**
-- **Evidence-first answers** → transparent and auditable  
-- **Polished frontend** → product sense & UX awareness  
-- **Robust retriever** → handles API quirks gracefully  
-- **Design notes & data insights** → clear engineering reasoning  
+| Enhancement | Description |
+|--------------|-------------|
+| **LLM Summary Mode** | Add optional `mode=llm` flag to generate contextual summaries via GPT/OpenAI API |
+| **Vector Search (FAISS)** | Enable semantic retrieval across similar phrasing or context |
+| **Advanced NER (Duckling + spaCy)** | Extract richer entity types (e.g., restaurant names, dates, flights) |
+| **/metrics Endpoint** | Return dataset stats and latency metrics for observability |
+| **Conversational Memory** | Maintain session context to support follow-up questions |
+| **CI/CD + Dockerization** | Add GitHub Actions for automated test & deploy to Render |
+
+These additions would evolve this app into a **production-grade retrieval-augmented agent**, ready for Aurora-scale internal knowledge systems.
 
 ---
 
